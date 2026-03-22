@@ -1,0 +1,375 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML Canvas · Predição de Churn · Telecom</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #eef2f5;
+            font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, Roboto, sans-serif;
+            padding: 2rem 1.5rem;
+            color: #1a2c3e;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* header */
+        .canvas-header {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .canvas-header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #0b3b5f, #1b6b87);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
+        }
+
+        .canvas-header p {
+            color: #2c5a6e;
+            margin-top: 0.4rem;
+            font-weight: 500;
+            border-bottom: 2px solid #cbdde6;
+            display: inline-block;
+            padding-bottom: 0.3rem;
+        }
+
+        /* tabela principal estilo ML Canvas (2 colunas por linha, blocos integrados) */
+        .canvas-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .canvas-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.2rem;
+        }
+
+        .canvas-card {
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.02);
+            flex: 1;
+            min-width: 280px;
+            transition: all 0.2s;
+            border: 1px solid #e2edf2;
+            overflow: hidden;
+        }
+
+        .canvas-card-header {
+            background: #f0f6fa;
+            padding: 0.9rem 1.2rem;
+            border-bottom: 2px solid #cbdde6;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #144d66;
+            letter-spacing: -0.2px;
+        }
+
+        .canvas-card-content {
+            padding: 1.2rem 1.4rem;
+            font-size: 0.9rem;
+            line-height: 1.45;
+        }
+
+        .canvas-card-content ul, .canvas-card-content p {
+            margin-bottom: 0.6rem;
+        }
+
+        .canvas-card-content li {
+            margin-left: 1.2rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .badge-metric {
+            background: #e9f0f3;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-right: 0.4rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .feature-tag {
+            background: #eef2fa;
+            border-left: 3px solid #2c7da0;
+            padding: 0.2rem 0.5rem;
+            margin: 0.2rem 0;
+            border-radius: 8px;
+            font-size: 0.8rem;
+        }
+
+        hr {
+            margin: 0.5rem 0;
+            border-color: #e2edf2;
+        }
+
+        .slo-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .slo-item {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: 1px solid #dce7ed;
+        }
+
+        .footer-note {
+            margin-top: 2rem;
+            background: #e2edf2;
+            border-radius: 1rem;
+            padding: 1rem 1.5rem;
+            font-size: 0.8rem;
+            text-align: center;
+            color: #1c5a72;
+        }
+
+        @media (max-width: 780px) {
+            body {
+                padding: 1rem;
+            }
+            .canvas-card-content {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="canvas-header">
+        <h1>📡 ML Canvas · Predição de Churn</h1>
+        <p>Operadora Telecom · Modelo MLP (PyTorch) + Baselines · MLflow · API REST</p>
+    </div>
+
+    <div class="canvas-grid">
+        <!-- LINHA 1: Stakeholders + Objetivos de Negócio + Métricas de Negócio -->
+        <div class="canvas-row">
+            <!-- Stakeholders -->
+            <div class="canvas-card">
+                <div class="canvas-card-header">👥 1. Stakeholders</div>
+                <div class="canvas-card-content">
+                    <ul>
+                        <li><strong>Diretoria Executiva</strong> – redução do churn rate, ROI de IA</li>
+                        <li><strong>Diretor de Marketing</strong> – campanhas de retenção segmentadas</li>
+                        <li><strong>Diretor de CRM</strong> – integração do score de risco</li>
+                        <li><strong>Equipe de Produto</strong> – ajuste de ofertas e serviços</li>
+                        <li><strong>Time de Dados / MLOps</strong> – entrega da API, MLflow, monitoramento</li>
+                        <li><strong>Time Comercial</strong> – priorização de contatos com alto risco</li>
+                    </ul>
+                </div>
+            </div>
+            <!-- Objetivos de Negócio -->
+            <div class="canvas-card">
+                <div class="canvas-card-header">🎯 2. Objetivos de Negócio</div>
+                <div class="canvas-card-content">
+                    <ul>
+                        <li>Reduzir <strong>churn rate em 15%</strong> nos primeiros 6 meses</li>
+                        <li>Aumentar eficiência de campanhas: focar nos <strong>20% clientes maior risco</strong></li>
+                        <li>Antecipar ações de retenção com <strong>15 dias de antecedência</strong></li>
+                        <li>Reduzir <strong>CAC</strong> (custo de aquisição) através da retenção preventiva</li>
+                        <li>Melhorar experiência e NPS com ações proativas</li>
+                    </ul>
+                </div>
+            </div>
+            <!-- Métricas de Negócio -->
+            <div class="canvas-card">
+                <div class="canvas-card-header">📊 3. Métricas de Negócio</div>
+                <div class="canvas-card-content">
+                    <ul>
+                        <li><strong>Churn Rate</strong> – redução de 5 p.p. em 6 meses</li>
+                        <li><strong>Receita retida</strong> – R$ X milhões evitados</li>
+                        <li><strong>ROI da campanha</strong> → &gt; 2.0 (receita retida / custo ação)</li>
+                        <li><strong>NPS</strong> – manter ou aumentar com ações de retenção</li>
+                        <li><strong>Taxa de conversão</strong> de ofertas para clientes com alto risco</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- LINHA 2: SLOs (Service Level Objectives) + Dados -->
+        <div class="canvas-row">
+            <!-- SLOs -->
+            <div class="canvas-card">
+                <div class="canvas-card-header">⚙️ 4. SLOs (Service Level Objectives)</div>
+                <div class="canvas-card-content">
+                    <div class="slo-grid">
+                        <span class="slo-item">✅ Acurácia ≥ 85%</span>
+                        <span class="slo-item">🎯 Recall (churn) ≥ 80%</span>
+                        <span class="slo-item">📏 Precisão ≥ 70%</span>
+                        <span class="slo-item">📈 AUC-ROC ≥ 0,90</span>
+                        <span class="slo-item">⚡ Inferência API ≤ 200ms (p95)</span>
+                        <span class="slo-item">🛡️ Disponibilidade API ≥ 99,5%</span>
+                        <span class="slo-item">🔄 Retreinamento mensal</span>
+                        <span class="slo-item">📦 F1-score (classe churn) ≥ 0,75</span>
+                    </div>
+                    <hr>
+                    <p><strong>Justificativa:</strong> recall elevado garante capturar a maioria dos cancelamentos; baixa latência permite integração com CRM e call center em tempo real.</p>
+                </div>
+            </div>
+            <!-- Dados -->
+            <div class="canvas-card">
+                <div class="canvas-card-header">🗃️ 5. Dados (Telco Customer Churn)</div>
+                <div class="canvas-card-content">
+                    <ul>
+                        <li><strong>Fontes:</strong> CRM, faturamento, logs de uso, SAC, sistema de pagamentos</li>
+                        <li><strong>Volume total:</strong> 7.043 clientes (registros históricos)</li>
+                        <li><strong>Granularidade:</strong> cliente + atributos contratuais e demográficos</li>
+                        <li><strong>Janela de predição:</strong> churn nos próximos 30 dias</li>
+                        <li><strong>Target:</strong> <code>Churn</code> (Yes/No) → classe desbalanceada: ~26,5% churn</li>
+                        <li><strong>Tratamento:</strong> remoção de <code>customerID</code>, conversão de <code>TotalCharges</code> para float</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- LINHA 3: Features (detalhado) -->
+        <div class="canvas-row">
+            <div class="canvas-card" style="flex: 2;">
+                <div class="canvas-card-header">🧬 6. Features · Engenharia e Pré-processamento</div>
+                <div class="canvas-card-content">
+                    <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
+                        <div style="flex: 1; min-width: 200px;">
+                            <strong>📁 Demográficas</strong>
+                            <div class="feature-tag">gender (F/M)</div>
+                            <div class="feature-tag">SeniorCitizen (0/1)</div>
+                            <div class="feature-tag">Partner, Dependents</div>
+                            <br>
+                            <strong>📆 Relacionamento</strong>
+                            <div class="feature-tag">tenure (meses)</div>
+                            <div class="feature-tag">Contract (Month-to-month, One year, Two year)</div>
+                            <div class="feature-tag">PaperlessBilling, PaymentMethod</div>
+                        </div>
+                        <div style="flex: 1; min-width: 200px;">
+                            <strong>📡 Serviços Contratados</strong>
+                            <div class="feature-tag">PhoneService, MultipleLines</div>
+                            <div class="feature-tag">InternetService (DSL/Fiber optic/No)</div>
+                            <div class="feature-tag">OnlineSecurity, OnlineBackup, DeviceProtection</div>
+                            <div class="feature-tag">TechSupport, StreamingTV, StreamingMovies</div>
+                        </div>
+                        <div style="flex: 1; min-width: 180px;">
+                            <strong>💰 Financeiro</strong>
+                            <div class="feature-tag">MonthlyCharges</div>
+                            <div class="feature-tag">TotalCharges (convertido)</div>
+                            <br>
+                            <strong>🔧 Transformações</strong>
+                            <div class="feature-tag">One-hot encoding (todas categóricas)</div>
+                            <div class="feature-tag">StandardScaler (tenure, MonthlyCharges, TotalCharges)</div>
+                            <div class="feature-tag">Target: Churn → 1/0</div>
+                            <div class="feature-tag">Dimensão final ≈ 45 features</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LINHA 4: Modelo(s) + Rastreamento + Entrega/API -->
+        <div class="canvas-row">
+            <div class="canvas-card">
+                <div class="canvas-card-header">🧠 7. Modelo(s)</div>
+                <div class="canvas-card-content">
+                    <p><strong>🎯 Modelo principal:</strong> MLP (Rede Neural) com PyTorch</p>
+                    <ul>
+                        <li>Arquitetura: <code>Input → 2-3 camadas ocultas (Dropout + BatchNorm) → Sigmoid</code></li>
+                        <li>Otimizador: Adam, função de perda: BCEWithLogitsLoss (com pesos para desbalanceamento)</li>
+                    </ul>
+                    <p><strong>📊 Baselines (Scikit-Learn):</strong></p>
+                    <ul>
+                        <li>Logistic Regression (class_weight='balanced')</li>
+                        <li>DummyClassifiert</li>
+                        <li>Comparação via Recall, AUC-ROC, F1-score</li>
+                    </ul>
+                    <p><em>O modelo final será selecionado com melhor recall ≥80% e AUC-ROC ≥0.90.</em></p>
+                </div>
+            </div>
+            <div class="canvas-card">
+                <div class="canvas-card-header">📈 8. Rastreamento e Experimentação</div>
+                <div class="canvas-card-content">
+                    <ul>
+                        <li><strong>MLflow Tracking</strong> – registro de hiperparâmetros, métricas (acurácia, recall, AUC-ROC), artefatos (modelos, curvas ROC, matriz confusão)</li>
+                        <li>Comparação direta entre experimentos PyTorch vs Scikit-Learn</li>
+                        <li>Versionamento de dados: <strong>DVC</strong> (opcional) para pipeline reprodutível</li>
+                        <li>Log automático de métricas durante treino e validação</li>
+                        <li>Registro do modelo campeão no MLflow Model Registry</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="canvas-card">
+                <div class="canvas-card-header">🚀 9. Entrega / API</div>
+                <div class="canvas-card-content">
+                    <ul>
+                        <li><strong>Framework:</strong> FastAPI</li>
+                        <li><strong>Endpoint:</strong> <code>POST /predict</code> – recebe JSON com features (após pré-processamento)</li>
+                        <li><strong>Resposta:</strong> <code>{"churn_probability": 0.87, "high_risk": true, "risk_level": "alto"}</code></li>
+                        <li>Documentação interativa</li>
+                        <li>Latência garantida dentro do SLO (≤200ms p95)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- LINHA 5: Monitoramento e Governança + Plano de Implementação -->
+        <div class="canvas-row">
+            <div class="canvas-card">
+                <div class="canvas-card-header">🔍 10. Monitoramento e Governança</div>
+                <div class="canvas-card-content">
+                    <ul>
+                        <li><strong>Data Drift:</strong> Evidently AI / Monitoramento de distribuição das features</li>
+                        <li><strong>Concept Drift:</strong> Avaliação contínua de métricas (recall, AUC) ao longo do tempo</li>
+                        <li><strong>Logs de predição:</strong> Armazenamento de inputs e scores para auditoria e rastreabilidade</li>
+                        <li><strong>Feedback Loop:</strong> Registro de cancelamentos reais (ground truth) para retreinamento programado</li>
+                        <li><strong>Versionamento de modelos:</strong> MLflow + Git, política de aprovação para produção</li>
+                        <li><strong>Alertas:</strong> Queda de recall abaixo de 75% ou aumento de latência acionam alertas automáticos</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="canvas-card">
+                <div class="canvas-card-header">📌 11. Plano de Implementação (Roadmap)</div>
+                <div class="canvas-card-content">
+                    <ol style="margin-left: 1rem;">
+                        <li>Exploração e preparação dos dados</li>
+                        <li>Feature engineering, encoding, normalização e split treino/teste</li>
+                        <li>Treinamento de baselines com Scikit-Learn + registro MLflow</li>
+                        <li>Construção e treino da MLP com PyTorch (otimização de hiperparâmetros)</li>
+                        <li>Comparação de modelos e seleção (Recall + AUC-ROC + trade-off negócio)</li>
+                        <li>Empacotamento do modelo campeão (formato TorchScript ou pickle + pré-processamento)</li>
+                        <li>Desenvolvimento da API (FastAPI, validação de entrada, documentação)</li>
+                        <li>Testes de carga e validação de SLOs (latência, throughput)</li>
+                        <li>Implantação em cloud/on-prem + pipeline CI/CD</li>
+                        <li>Monitoramento contínuo, retreinamento mensal e atualização do ML Canvas com métricas reais</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-note">
+        ✅ <strong>ML Canvas alinhado com os requisitos:</strong> modelo preditivo de churn usando MLP (PyTorch), baselines Scikit-Learn, rastreamento com MLflow e entrega via API REST. 
+        Stakeholders, métricas de negócio e SLOs definidos para reduzir cancelamento acelerado da operadora.
+    </div>
+</div>
+</body>
+</html>
