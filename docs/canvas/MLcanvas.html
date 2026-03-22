@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -240,7 +239,6 @@
                         <li><strong>Granularidade:</strong> cliente + atributos contratuais e demográficos</li>
                         <li><strong>Janela de predição:</strong> churn nos próximos 30 dias</li>
                         <li><strong>Target:</strong> <code>Churn</code> (Yes/No) → classe desbalanceada: ~26,5% churn</li>
-                        <li><strong>Tratamento:</strong> remoção de <code>customerID</code>, conversão de <code>TotalCharges</code> para float</li>
                     </ul>
                 </div>
             </div>
@@ -299,7 +297,7 @@
                     <p><strong>📊 Baselines (Scikit-Learn):</strong></p>
                     <ul>
                         <li>Logistic Regression (class_weight='balanced')</li>
-                        <li>DummyClassifiert</li>
+                        <li>DummyClassifier</li>
                         <li>Comparação via Recall, AUC-ROC, F1-score</li>
                     </ul>
                     <p><em>O modelo final será selecionado com melhor recall ≥80% e AUC-ROC ≥0.90.</em></p>
