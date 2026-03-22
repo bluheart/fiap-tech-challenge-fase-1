@@ -1,4 +1,4 @@
-artifact_path: /workspaces/fiap-tech-challenge-fase-1/notebooks/../artifacts/models/m-9dac957b9763407da6994b535ebbdbe1/artifacts
+artifact_path: /workspaces/fiap-tech-challenge-fase-1/notebooks/../artifacts/models/m-3a2d65c62eaf44a299d46ad1c80da816/artifacts
 flavors:
   python_function:
     env:
@@ -16,11 +16,11 @@ flavors:
     skops_trusted_types: null
 is_signature_from_type_hint: false
 mlflow_version: 3.10.1
-model_id: m-9dac957b9763407da6994b535ebbdbe1
+model_id: m-3a2d65c62eaf44a299d46ad1c80da816
 model_size_bytes: 1391
-model_uuid: m-9dac957b9763407da6994b535ebbdbe1
+model_uuid: m-3a2d65c62eaf44a299d46ad1c80da816
 prompts: null
-run_id: dd8c9372248b48a9b56674108ad1b570
+run_id: 159791ed2bfd449493b18d9ba403bd0e
 signature:
   inputs: '[{"type": "boolean", "name": "gender", "required": true}, {"type": "boolean",
     "name": "SeniorCitizen", "required": true}, {"type": "boolean", "name": "Partner",
@@ -44,4 +44,4 @@ signature:
   outputs: '[{"type": "tensor", "tensor-spec": {"dtype": "bool", "shape": [-1]}}]'
   params: null
 type_hint_from_example: false
-utc_time_created: '2026-03-22 22:24:32.713250'
+utc_time_created: '2026-03-22 23:29:38.260686'
