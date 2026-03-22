@@ -1,0 +1,3 @@
+{
+  "DummyClassifier_score_X_test": "DummyClassifier.score(X=X_test, y=y_test)"
+}
