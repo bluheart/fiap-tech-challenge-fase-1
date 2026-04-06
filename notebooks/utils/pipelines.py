@@ -1,9 +1,11 @@
 import pandas as pd
 import torch
+import joblib
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, FunctionTransformer
-
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
 
 class BoolToIntTransformer(BaseEstimator, TransformerMixin):
     """Convert boolean columns to int (0/1)"""
@@ -118,10 +120,13 @@ class CustomPreprocessor(BaseEstimator, TransformerMixin):
             X_processed[col] = X_processed[col].astype(int)
 
         return X_processed
-
-
-def to_tensor(X):
-    return torch.tensor(X, dtype=torch.float32)
+    
+    @staticmethod
+    def to_tensor(X):
+        # Convert to numpy array if it's a DataFrame
+        if isinstance(X, pd.DataFrame):
+            X = X.to_numpy()
+        return torch.tensor(X, dtype=torch.float32)
 
 
 # Create the complete pipeline
@@ -129,7 +134,33 @@ def create_preprocessing_pipeline():
     pipeline = Pipeline(
         [
             ("preprocessor", CustomPreprocessor()),
-            ("tensor_converter", FunctionTransformer(to_tensor)),
+            ("tensor_converter", FunctionTransformer(CustomPreprocessor.to_tensor)),
         ]
     )
     return pipeline
+
+def preprocess_label(label_train, label_test):
+    encoder = LabelEncoder()
+    y_train = encoder.fit_transform(label_train)
+    y_test = encoder.transform(label_test)
+    return y_train, y_test
+
+# train pipeline if run
+if __name__ == "__main__":
+    RANDOM_SEED = 19
+    dados = "data/raw/telco-customer-churn.csv"
+    local_modelo = 'artifacts/models/data_processing.joblib'
+    df = pd.read_csv(dados)
+
+    X = df.drop(columns=['customerID', 'Churn'])
+    y = df['Churn']
+
+    # Train-test split
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=RANDOM_SEED, stratify=y
+    )
+    pipeline = create_preprocessing_pipeline()
+    pipeline.fit(X_train)
+    print(f"Pipeline de transformação de dados treinada com arquivo {dados}")
+    joblib.dump(pipeline, local_modelo)
+    print(f"Joblib salva em {local_modelo}")
