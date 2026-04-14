@@ -525,6 +525,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "fastapi" },
+    { name = "joblib" },
     { name = "mlflow" },
     { name = "scikit-learn" },
     { name = "torch" },
@@ -544,6 +545,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = ">=0.135.1" },
+    { name = "joblib", specifier = ">=1.5.3" },
     { name = "mlflow", specifier = ">=3.10.1" },
     { name = "scikit-learn", specifier = ">=1.8.0" },
     { name = "torch", specifier = ">=2.10.0" },

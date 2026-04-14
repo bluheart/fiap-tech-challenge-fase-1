@@ -1,0 +1,29 @@
+artifact_path: /workspaces/fiap-tech-challenge-fase-1/notebooks/../artifacts/models/m-9b732c98ec4b4bb58b71cb1dcba6693f/artifacts
+flavors:
+  python_function:
+    config:
+      device: null
+    data: data
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pytorch
+    pickle_module_name: mlflow.pytorch.pickle_module
+    python_version: 3.13.12
+  pytorch:
+    code: null
+    model_data: data
+    pytorch_version: 2.10.0+cu128
+is_signature_from_type_hint: false
+mlflow_version: 3.10.1
+model_id: m-9b732c98ec4b4bb58b71cb1dcba6693f
+model_size_bytes: 206400
+model_uuid: m-9b732c98ec4b4bb58b71cb1dcba6693f
+prompts: null
+run_id: 565577aa1b6e4929a8a6b762e71e424c
+signature:
+  inputs: '[{"type": "any", "required": true}]'
+  outputs: '[{"type": "any", "required": true}]'
+  params: null
+type_hint_from_example: false
+utc_time_created: '2026-04-09 23:15:52.478073'
