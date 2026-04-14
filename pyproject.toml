@@ -8,6 +8,7 @@ dependencies = [
     "fastapi>=0.135.1",
     "joblib>=1.5.3",
     "mlflow>=3.10.1",
+    "pandera>=0.31.0",
     "scikit-learn>=1.8.0",
     "torch>=2.10.0",
 ]
