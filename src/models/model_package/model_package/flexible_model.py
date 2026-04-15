@@ -87,7 +87,7 @@ class FlexibleMLP(nn.Module):
                 - numpy array of shape (input_size,) or (batch_size, input_size)
                 - list of shape (input_size,) or (batch_size, input_size)
             return_probs (bool): If True, return class probabilities.
-                                 If False, return class indices (default: False)
+                                If False, return class indices (default: False)
             device (str, optional): Device to run prediction on ('cpu' or 'cuda').
                                     If None, uses current model's device.
         
@@ -99,50 +99,62 @@ class FlexibleMLP(nn.Module):
                 - For single sample: numpy array of shape (num_classes,)
                 - For batch: numpy array of shape (batch_size, num_classes)
         """
+        # Store original training mode
+        original_training_mode = self.training
+        
         # Set model to evaluation mode
         self.eval()
         
-        # Determine device
-        if device is None:
-            device = next(self.parameters()).device
-        
-        # Convert input to tensor and handle different input types
-        if isinstance(x, np.ndarray):
-            x = torch.from_numpy(x).float()
-        elif isinstance(x, list):
-            x = torch.tensor(x, dtype=torch.float32)
-        elif not isinstance(x, torch.Tensor):
-            raise TypeError(f"Unsupported input type: {type(x)}. Expected torch.Tensor, numpy.ndarray, or list.")
-        
-        # Track if this is a single sample (no batch dimension)
-        is_single_sample = (x.dim() == 1)
-        
-        # Add batch dimension if needed
-        if is_single_sample:
-            x = x.unsqueeze(0)
-        
-        # Move to device
-        x = x.to(device)
-        
-        # Make prediction
-        with torch.no_grad():
-            outputs = self(x)
+        try:
+            # Determine device
+            if device is None:
+                device = next(self.parameters()).device
             
-            if return_probs:
-                # Apply softmax to get probabilities
-                predictions = torch.softmax(outputs, dim=1)[:, 1].numpy()
+            # Convert input to tensor and handle different input types
+            if isinstance(x, np.ndarray):
+                x = torch.from_numpy(x).float()
+            elif isinstance(x, list):
+                x = torch.tensor(x, dtype=torch.float32)
+            elif not isinstance(x, torch.Tensor):
+                raise TypeError(f"Unsupported input type: {type(x)}. Expected torch.Tensor, numpy.ndarray, or list.")
+            
+            # Track if this is a single sample (no batch dimension)
+            is_single_sample = (x.dim() == 1)
+            
+            # Add batch dimension if needed
+            if is_single_sample:
+                x = x.unsqueeze(0)
+            
+            # Move to device
+            x = x.to(device)
+            
+            # Make prediction
+            with torch.no_grad():
+                outputs = self(x)
+                
+                if return_probs:
+                    # Apply softmax to get probabilities
+                    predictions = torch.softmax(outputs, dim=1)
+                    # Convert to numpy
+                    predictions = predictions.cpu().numpy()
+                else:
+                    # Get class indices
+                    predictions = torch.argmax(outputs, dim=1)
+                    # Convert to numpy
+                    predictions = predictions.cpu().numpy()
+            
+            # Handle single sample case
+            if is_single_sample:
+                if return_probs:
+                    return predictions.squeeze(0)  # Return 1D array of probabilities
+                else:
+                    return predictions.item()  # Return int for single sample
             else:
-                # Get class indices
-                predictions = torch.argmax(outputs, dim=1)
+                return predictions
         
-        # Convert to numpy and handle single sample case
-        if is_single_sample:
-            if return_probs:
-                return predictions.squeeze(0)
-            else:
-                return predictions.item()
-        else:
-            return predictions
+        finally:
+            # Restore original training mode
+            self.train(original_training_mode)
     
     def predict_single(self, x, return_probs=False, device=None):
         """
