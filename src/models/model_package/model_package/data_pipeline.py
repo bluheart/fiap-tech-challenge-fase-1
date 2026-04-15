@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import torch
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import Pipeline
@@ -121,14 +122,44 @@ class CustomPreprocessor(BaseEstimator, TransformerMixin):
     
     @staticmethod
     def to_tensor(X):
-        # Convert to numpy array if it's a DataFrame
+        """
+        Convert input data to a PyTorch tensor.
+        
+        This method converts pandas DataFrame objects to numpy arrays before
+        creating a PyTorch tensor. Other input types are directly converted
+        to tensors.
+        
+        Args:
+            X (pd.DataFrame or array-like): Input data to convert. Can be a pandas
+                DataFrame, numpy array, or any other array-like structure that
+                can be converted to a PyTorch tensor.
+        
+        Returns:
+            torch.Tensor: Input data converted to a float32 PyTorch tensor.
+        """
         if isinstance(X, pd.DataFrame):
-            X = X.to_numpy()
+            # Convert DataFrame to numpy array with float dtype
+            X = X.select_dtypes(include=[np.number]).to_numpy(dtype=np.float32)
+        elif isinstance(X, np.ndarray):
+            # If it's a numpy array but with object dtype, try to convert to float
+            if X.dtype == np.object_:
+                X = X.astype(np.float32)
         return torch.tensor(X, dtype=torch.float32)
 
 
 # Create the complete pipeline
 def create_preprocessing_pipeline():
+    """
+    Creates a complete preprocessing pipeline for transforming input data.
+    
+    The pipeline consists of two main steps:
+    1. CustomPreprocessor: Applies custom preprocessing operations to the input data
+    2. FunctionTransformer: Converts the preprocessed data into tensor format
+    
+    Returns:
+        sklearn.pipeline.Pipeline: A pipeline object that sequentially applies
+        the custom preprocessor and tensor converter transformations.
+    """
     pipeline = Pipeline(
         [
             ("preprocessor", CustomPreprocessor()),
@@ -137,7 +168,26 @@ def create_preprocessing_pipeline():
     )
     return pipeline
 
+
 def preprocess_label(label_train, label_test):
+    """
+    Encodes categorical labels into numerical format using LabelEncoder.
+    
+    This function fits a LabelEncoder on the training labels and then transforms
+    both training and testing labels into encoded integer values.
+    
+    Args:
+        label_train (array-like of shape (n_samples,)): Training labels to be encoded.
+        label_test (array-like of shape (n_samples,)): Testing labels to be encoded.
+    
+    Returns:
+        tuple: A tuple containing:
+            - y_train (numpy.ndarray): Encoded training labels
+            - y_test (numpy.ndarray): Encoded testing labels
+    
+    Raises:
+        ValueError: If label_test contains labels not present in label_train.
+    """
     encoder = LabelEncoder()
     y_train = encoder.fit_transform(label_train)
     y_test = encoder.transform(label_test)

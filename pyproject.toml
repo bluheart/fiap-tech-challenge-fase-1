@@ -8,6 +8,7 @@ dependencies = [
     "fastapi>=0.135.1",
     "joblib>=1.5.3",
     "mlflow>=3.10.1",
+    "pandas>=2.3.3",
     "pandera>=0.31.0",
     "scikit-learn>=1.8.0",
     "torch>=2.10.0",
@@ -27,6 +28,7 @@ dev = [
 [tool.taskipy.tasks]
 test = "pytest tests/ -v"
 test-cov = "pytest tests/ -v --cov=src --cov-report=html"
+test-package = "pytest src/models/model_package/tests -v"
 lint = "ruff check src/ tests/ notebooks/utils/"
 lint-fix = "ruff check src/ tests/ notebooks/utils/ --fix"
 format = "ruff format src/ tests/ notebooks/utils/"
@@ -34,3 +36,4 @@ format-check = "ruff format src/ tests/ notebooks/utils/ --check"
 check = "task lint && task format-check && task test"
 clean = "rm -rf .pytest_cache .coverage htmlcov __pycache__ .ruff_cache"
 mlflow = "mlflow ui"
+make-pack = "cd src/models/model_package && make all"
