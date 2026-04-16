@@ -1,7 +1,4 @@
 from .flexible_model import FlexibleMLP
-from .customer_churn_dataframe_schema import CustomerChurnSchema
-from .data_pipeline import CustomPreprocessor
-import pandera as pa
 import pandas as pd
 import torch
 import joblib
