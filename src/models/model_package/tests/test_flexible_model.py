@@ -5,7 +5,7 @@ import tempfile
 import os
 from unittest.mock import Mock, patch
 
-from model_package import (
+from mlp_package import (
     FlexibleMLP, EarlyStopping
 )
 

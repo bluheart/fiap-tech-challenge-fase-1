@@ -2,6 +2,8 @@ from pydantic import BaseModel, Field, validator
 from typing import Optional
 
 class CustomerChurnBase(BaseModel):
+    customerID: str = Field(..., min_length=1)
+    
     # Demographics
     gender: str = Field(..., pattern="^(Male|Female)$")
     SeniorCitizen: int = Field(..., ge=0, le=1)
@@ -18,14 +20,14 @@ class CustomerChurnBase(BaseModel):
     
     # Services
     PhoneService: str = Field(..., pattern="^(Yes|No)$")
-    MultipleLines: Optional[str] = Field(None, pattern="^(Yes|No|No phone service)$")
+    MultipleLines: str = Field(..., pattern="^(Yes|No|No phone service)$")
     InternetService: str = Field(..., pattern="^(DSL|Fiber optic|No)$")
-    OnlineSecurity: Optional[str] = Field(None, pattern="^(Yes|No|No internet service)$")
-    OnlineBackup: Optional[str] = Field(None, pattern="^(Yes|No|No internet service)$")
-    DeviceProtection: Optional[str] = Field(None, pattern="^(Yes|No|No internet service)$")
-    TechSupport: Optional[str] = Field(None, pattern="^(Yes|No|No internet service)$")
-    StreamingTV: Optional[str] = Field(None, pattern="^(Yes|No|No internet service)$")
-    StreamingMovies: Optional[str] = Field(None, pattern="^(Yes|No|No internet service)$")
+    OnlineSecurity: str = Field(..., pattern="^(Yes|No|No internet service)$")
+    OnlineBackup: str = Field(..., pattern="^(Yes|No|No internet service)$")
+    DeviceProtection: str = Field(..., pattern="^(Yes|No|No internet service)$")
+    TechSupport: str = Field(..., pattern="^(Yes|No|No internet service)$")
+    StreamingTV: str = Field(..., pattern="^(Yes|No|No internet service)$")
+    StreamingMovies: str = Field(..., pattern="^(Yes|No|No internet service)$")
     
     # Target (for prediction)
     Churn: Optional[str] = Field(None, pattern="^(Yes|No)$")

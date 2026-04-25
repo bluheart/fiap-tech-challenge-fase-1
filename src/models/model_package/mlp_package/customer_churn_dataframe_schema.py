@@ -21,8 +21,7 @@ class CustomerChurnSchema(pa.DataFrameModel):
         Check.isin(['Yes', 'No'])
     ])
     tenure: Column(pa.Int, nullable=False, checks=[
-        Check.ge(0),
-        Check.le(72)
+        Check.ge(0)
     ])
     PhoneService: Column(pa.String, nullable=False, checks=[
         Check.isin(['Yes', 'No'])
@@ -62,13 +61,10 @@ class CustomerChurnSchema(pa.DataFrameModel):
                    'Credit card (automatic)'])
     ])
     MonthlyCharges: Column(pa.Float, nullable=False, checks=[
-        Check.ge(0),
-        Check.le(150)
+        Check.ge(0)
     ])
-    TotalCharges: Column(pa.String, nullable=False, checks=[
-        Check(lambda s: s.replace('.', '').replace('-', '').isdigit() or s == '', 
-              element_wise=True, 
-              error="TotalCharges must be a numeric string or empty")
+    TotalCharges: Column(pa.Float, nullable=False, checks=[
+        Check.ge(0)
     ])
     Churn: Column(pa.String, nullable=False, checks=[
         Check.isin(['Yes', 'No'])

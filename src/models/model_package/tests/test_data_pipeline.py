@@ -8,7 +8,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import train_test_split
 
 # Import your modules
-from model_package import (
+from mlp_package import (
     BoolToIntTransformer,
     CustomPreprocessor,
     create_preprocessing_pipeline,
