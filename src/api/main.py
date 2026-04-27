@@ -28,8 +28,10 @@ async def predict_churn(customer: CustomerChurnBase):
     Accepts customer data and returns churn prediction
     """
     
+    predictions = model.predict([customer.dict()])
+
     return {
         "customer_id": "generated_id",
         "churn_risk": "High",  # Example output
-        "validated_data": customer.dict()
+        "validated_data": predictions
     }

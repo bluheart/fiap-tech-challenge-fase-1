@@ -14,7 +14,7 @@ class CustomerChurnBase(BaseModel):
     tenure: int = Field(..., ge=0, le=72)
     Contract: str = Field(..., pattern="^(Month-to-month|One year|Two year)$")
     PaperlessBilling: str = Field(..., pattern="^(Yes|No)$")
-    PaymentMethod: str = Field(..., pattern="^(Electronic check|Mailed check|Bank transfer|Credit card)$")
+    PaymentMethod: str = Field(..., pattern=r"^(Electronic check|Mailed check|Bank transfer \(automatic\)|Credit card \(automatic\))$")
     MonthlyCharges: float = Field(..., ge=0, le=150)
     TotalCharges: float = Field(..., ge=0)
     
@@ -28,9 +28,6 @@ class CustomerChurnBase(BaseModel):
     TechSupport: str = Field(..., pattern="^(Yes|No|No internet service)$")
     StreamingTV: str = Field(..., pattern="^(Yes|No|No internet service)$")
     StreamingMovies: str = Field(..., pattern="^(Yes|No|No internet service)$")
-    
-    # Target (for prediction)
-    Churn: Optional[str] = Field(None, pattern="^(Yes|No)$")
     
     @validator('TotalCharges')
     def validate_total_charges(cls, v, values):

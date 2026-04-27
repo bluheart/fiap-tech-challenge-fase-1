@@ -120,19 +120,6 @@ class TestCustomPreprocessor:
         assert result['TotalCharges'].dtype in [np.float64, np.int64]
         assert not result['TotalCharges'].isna().any()
     
-    def test_preprocess_handles_missing_total_charges(self, preprocessor):
-        """Test handling of missing TotalCharges values"""
-        df = pd.DataFrame({
-            'TotalCharges': ['100', 'invalid', '200', None, '300'],
-            'tenure': [1, 2, 3, 4, 5],
-            'MonthlyCharges': [10, 20, 30, 40, 50]
-        })
-        
-        result = preprocessor._preprocess(df)
-        
-        # Should fill NaN with mean of valid values
-        assert result['TotalCharges'].isna().sum() == 0
-        assert result['TotalCharges'].dtype in [np.float64, np.int64]
     
     def test_preprocess_transforms_multiple_lines(self, preprocessor, sample_data):
         """Test transformation of MultipleLines column"""

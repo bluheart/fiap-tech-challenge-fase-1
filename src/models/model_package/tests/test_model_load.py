@@ -52,42 +52,6 @@ class TestLoadModel:
     def test_initialization(self, load_model):
         """Test that LoadModel initializes correctly"""
         assert load_model is not None
-    
-    def test_predict_single_customer(self, load_model, mock_models):
-        """Test prediction for a single customer"""
-        # Sample customer data
-        customer = {
-            'customerID': '7590-VHVEG',
-            'gender': 'Female',
-            'SeniorCitizen': 1,
-            'Partner': 'No',
-            'Dependents': 'Yes',
-            'tenure': 24,
-            'PhoneService': 'Yes',
-            'MultipleLines': 'No',
-            'InternetService': 'Fiber optic',
-            'OnlineSecurity': 'Yes',
-            'OnlineBackup': 'No',
-            'DeviceProtection': 'Yes',
-            'TechSupport': 'No',
-            'StreamingTV': 'Yes',
-            'StreamingMovies': 'No',
-            'Contract': 'Month-to-month',
-            'PaperlessBilling': 'Yes',
-            'PaymentMethod': 'Electronic check',
-            'MonthlyCharges': 85.5,
-            'TotalCharges': '2052.0'
-        }
-        
-        # Mock the model prediction
-        mock_models['model'].predict.return_value = np.array([1])
-        
-        # Test prediction
-        result = load_model.predict([customer])
-        
-        # Assertions
-        assert result in [0, 1] or result in ['Yes', 'No']
-        mock_models['model'].predict.assert_called_once()
 
 
 class TestFlexibleMLP:

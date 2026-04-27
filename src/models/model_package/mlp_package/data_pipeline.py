@@ -5,6 +5,12 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, FunctionTransformer
 from sklearn.preprocessing import LabelEncoder
+import logging
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s | %(name)s | %(levelname)s | %(filename)s | %(lineno)s | %(funcName)20s() %(message)s'
+)
 
 class BoolToIntTransformer(BaseEstimator, TransformerMixin):
     """Convert boolean columns to int (0/1)"""
@@ -29,6 +35,16 @@ class CustomPreprocessor(BaseEstimator, TransformerMixin):
         self.no_yes_cols = None
         self.columns_to_scale = ["tenure", "MonthlyCharges", "TotalCharges"]
         self.categorical_cols = ["InternetService", "Contract", "PaymentMethod"]
+        self.one_hot_columns = [
+            "InternetService_Fiber optic",
+            "InternetService_No",
+            "Contract_One year",
+            "Contract_Two year",
+            "PaymentMethod_Credit card (automatic)",
+            "PaymentMethod_Electronic check",
+            "PaymentMethod_Mailed check"
+        ]
+        
 
     def fit(self, X, y=None):
         # Store column names for later
@@ -73,7 +89,7 @@ class CustomPreprocessor(BaseEstimator, TransformerMixin):
                 X_copy[col] = X_copy[col].apply(
                     lambda value: "No" if value == "No internet service" else value
                 )
-
+        
         # Apply mapping for Yes/No and Male/Female columns
         no_yes_cols = [
             "gender",
@@ -94,30 +110,42 @@ class CustomPreprocessor(BaseEstimator, TransformerMixin):
             X_copy["SeniorCitizen"] = X_copy["SeniorCitizen"].apply(
                 lambda value: bool(value)
             )
+        
+        logging.debug(f"Before One-hot {X_copy.columns}")
 
-        # One-hot encoding for categorical columns
-        categorical_cols = [
-            col for col in self.categorical_cols if col in X_copy.columns
-        ]
-        if categorical_cols:
-            X_copy = pd.get_dummies(X_copy, columns=categorical_cols, drop_first=True)
+        for cat_col in self.categorical_cols:
+            if cat_col in X_copy.columns:
+                # For each possible category in our hard-coded list, create a column
+                for oh_col in self.one_hot_columns:
+                    if oh_col.startswith(f"{cat_col}_"):
+                        # Extract the category value (everything after the underscore)
+                        category_value = oh_col.split('_', 1)[1]
+                        # Create column with 1 if matches, else 0
+                        X_copy[oh_col] = (X_copy[cat_col] == category_value).astype(int)
+                
+                # Drop the original categorical column
+                X_copy = X_copy.drop(columns=[cat_col])
 
         return X_copy
 
     def transform(self, X):
+        logging.debug(f"Starting {X.columns}")
         # Apply preprocessing
         X_processed = self._preprocess(X)
+        logging.debug(f"Processed {X_processed.columns}")
 
         # Scale numeric columns
         X_processed[self.columns_to_scale] = self.scaler.transform(
             X_processed[self.columns_to_scale]
         )
+        logging.debug(f"Scaled {X_processed.columns}")
 
         # Convert boolean to int
         bool_cols = X_processed.select_dtypes(include=["bool"]).columns
         for col in bool_cols:
             X_processed[col] = X_processed[col].astype(int)
 
+        logging.debug(f"Data ready {X_processed}")        
         return X_processed
     
     @staticmethod
