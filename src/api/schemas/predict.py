@@ -1,5 +1,4 @@
-from pydantic import BaseModel, Field, validator
-from typing import Optional
+from pydantic import BaseModel, Field, field_validator
 
 class CustomerChurnBase(BaseModel):
     customerID: str = Field(..., min_length=1)
@@ -29,10 +28,12 @@ class CustomerChurnBase(BaseModel):
     StreamingTV: str = Field(..., pattern="^(Yes|No|No internet service)$")
     StreamingMovies: str = Field(..., pattern="^(Yes|No|No internet service)$")
     
-    @validator('TotalCharges')
-    def validate_total_charges(cls, v, values):
-        if 'MonthlyCharges' in values and 'tenure' in values:
-            expected = values['MonthlyCharges'] * values['tenure']
+    field_validator('TotalCharges')
+    @classmethod
+    def validate_total_charges(cls, v, info):
+        # Access other fields via info.data
+        if 'MonthlyCharges' in info.data and 'tenure' in info.data:
+            expected = info.data['MonthlyCharges'] * info.data['tenure']
             if not (expected * 0.9 <= v <= expected * 1.1):
                 raise ValueError(f'TotalCharges should be approx {expected}')
         return v
