@@ -6,12 +6,17 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.135.1",
+    "httpx>=0.28.1",
     "joblib>=1.5.3",
     "mlflow>=3.10.1",
+    "mlp-package",
     "pandas>=2.3.3",
     "pandera>=0.31.0",
+    "prometheus-fastapi-instrumentator>=7.1.0",
+    "python-json-logger>=4.1.0",
     "scikit-learn>=1.8.0",
     "torch>=2.10.0",
+    "uvicorn>=0.42.0",
 ]
 
 [dependency-groups]
@@ -36,4 +41,10 @@ format-check = "ruff format src/ tests/ notebooks/utils/ --check"
 check = "task lint && task format-check && task test"
 clean = "rm -rf .pytest_cache .coverage htmlcov __pycache__ .ruff_cache"
 mlflow = "mlflow ui"
-make-pack = "cd src/models/model_package && make all"
+build-package = "cd src/models/model_package && make all"
+add-package = { cmd = "uv pip install --force-reinstall --no-deps dist/mlp_package-0.1.0-py3-none-any.whl" }
+make-pack = { cmd = "task build-package && task add-package && uv sync", depends_on = ["build-package", "add-package"] }
+test-run = "uvicorn src.api.main:app --reload --port 8000"
+
+[tool.uv.sources]
+mlp-package = { path = "dist/mlp_package-0.1.0-py3-none-any.whl" }

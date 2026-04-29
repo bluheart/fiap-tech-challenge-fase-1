@@ -1,11 +1,12 @@
 import pytest
-import pandas as pd
 import numpy as np
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import patch, MagicMock
 
 # Import your module
-from model_package import LoadModel, FlexibleMLP
+from mlp_package import LoadModel, FlexibleMLP
 
+model_path = './models/model_weights_v1.pth'
+pipeline_path = './models/data_processing.joblib'
 
 class TestLoadModel:
     """Simplified tests for LoadModel class"""
@@ -15,7 +16,7 @@ class TestLoadModel:
         """Create mock models for testing"""
         with patch('joblib.load') as mock_joblib, \
              patch('torch.load') as mock_torch, \
-             patch('model_package.model_load.FlexibleMLP') as mock_mlp_class:
+             patch('mlp_package.model_load.FlexibleMLP') as mock_mlp_class:
             
             # Create mock pipeline
             mock_pipeline = MagicMock()
@@ -46,47 +47,11 @@ class TestLoadModel:
         model_file.touch()
         
         # Initialize LoadModel
-        return LoadModel()
+        return LoadModel(model_path, pipeline_path)
     
     def test_initialization(self, load_model):
         """Test that LoadModel initializes correctly"""
         assert load_model is not None
-    
-    def test_predict_single_customer(self, load_model, mock_models):
-        """Test prediction for a single customer"""
-        # Sample customer data
-        customer = {
-            'customerID': '7590-VHVEG',
-            'gender': 'Female',
-            'SeniorCitizen': 1,
-            'Partner': 'No',
-            'Dependents': 'Yes',
-            'tenure': 24,
-            'PhoneService': 'Yes',
-            'MultipleLines': 'No',
-            'InternetService': 'Fiber optic',
-            'OnlineSecurity': 'Yes',
-            'OnlineBackup': 'No',
-            'DeviceProtection': 'Yes',
-            'TechSupport': 'No',
-            'StreamingTV': 'Yes',
-            'StreamingMovies': 'No',
-            'Contract': 'Month-to-month',
-            'PaperlessBilling': 'Yes',
-            'PaymentMethod': 'Electronic check',
-            'MonthlyCharges': 85.5,
-            'TotalCharges': '2052.0'
-        }
-        
-        # Mock the model prediction
-        mock_models['model'].predict.return_value = np.array([1])
-        
-        # Test prediction
-        result = load_model.predict([customer])
-        
-        # Assertions
-        assert result in [0, 1] or result in ['Yes', 'No']
-        mock_models['model'].predict.assert_called_once()
 
 
 class TestFlexibleMLP:

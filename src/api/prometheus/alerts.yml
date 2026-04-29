@@ -1,0 +1,45 @@
+# Alert rules
+
+groups:
+  - name: mlp-api-alerts
+    rules:
+      - alert: APIDown
+        expr: up{job='mlp-api'} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MLP API is down"
+          description: "API not responding"
+      
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{status=~"5.."}[5m]))
+          / sum(rate(http_requests_total[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: high
+        annotations:
+          summary: "Error rate above 5%"
+          description: "{{ $value | humanizePercentage }} of requests are failing"
+      
+      - alert: HighLatency
+        expr: |
+          histogram_quantile(0.95,
+            rate(http_request_latency_seconds_bucket[5m])
+          ) > 1
+        for: 5m
+        labels:
+          severity: medium
+        annotations:
+          summary: "Latency p95 above 1 second"
+          description: "Current latency: {{ $value | humanizeDuration }}"
+
+      - alert: ModelNotLoaded
+        expr: model_loaded == 0
+        for: 1m
+        labels:
+          severity: high
+        annotations:
+          summary: "Model not loaded"
+          description: "API is running without the prediction model"
