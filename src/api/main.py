@@ -32,8 +32,8 @@ CURRENT_DIR = Path(__file__).parent.absolute()
 # Go up two levels to the project root (adjust based on your structure)
 PROJECT_ROOT = CURRENT_DIR.parent.parent
 # Build absolute paths
-model_path = PROJECT_ROOT / 'artifacts' / 'models' / 'model_weights_v1.pth'
-pipeline_path = PROJECT_ROOT / 'artifacts' / 'models' / 'data_processing.joblib'
+model_path = PROJECT_ROOT / 'src' / 'models' / 'artifacts' / 'model_weights_v1.pth'
+pipeline_path = PROJECT_ROOT / 'src' / 'models' / 'artifacts' / 'data_processing.joblib'
 
 if not model_path.exists():
     logger.warning("model not found", extra={"path": str(model_path)})
@@ -80,7 +80,37 @@ Instrumentator().instrument(app).expose(app, endpoint="/metrics")
 @app.post("/predict")
 async def predict_churn(customer: CustomerChurnBase, request: Request):
     """
-    Accepts customer data and returns churn prediction
+    Predict customer churn probability based on provided customer data.
+    
+    Uses the pre-loaded machine learning model to calculate churn probability
+    and returns a binary prediction based on a configured threshold.
+    
+    Args:
+        customer: Validated customer data conforming to CustomerChurnBase schema
+        request: FastAPI request object for accessing request state (trace_id)
+    
+    Returns:
+        dict containing:
+            - customer_id: The customer's identifier
+            - churn: Binary prediction ("yes"/"no") based on threshold comparison
+            - threshold_used: The probability threshold used for classification
+            - probs: Probability scores for both classes (churn/no churn)
+    
+    Raises:
+        HTTPException 503: If the model has not been loaded or initialized
+    
+    Side Effects:
+        - Increments Prometheus TOTAL_PREDICTIONS counter
+        - Records prediction latency to PREDICTION_LATENCY histogram
+        - Logs prediction details including trace_id, customer_id, and probabilities
+    
+    Example Response:
+        {
+            "customer_id": "1234-ABCD",
+            "churn": "yes",
+            "threshold_used": 0.5,
+            "probs": {"yes": 0.78, "no": 0.22}
+        }
     """
     if not model:
         raise HTTPException(status_code=503, detail="Modelo not available")
@@ -92,21 +122,22 @@ async def predict_churn(customer: CustomerChurnBase, request: Request):
     start = time.perf_counter()
 
     predictions = model.predict([customer_dict])
+    if predictions:
+        logger.info("prediction completed", extra={
+            "trace_id": trace_id,
+            "customer_id": customer_dict['customerID'],
+            "churn_prob": predictions[0][1],
+            "no_churn_prob": predictions[0][0],
+            "threshold": THRESHOLD
+        })
+    else:
+        logger.warning("predictions not generated")
 
     latency = time.perf_counter() - start
 
     # Prometheus metrics
     TOTAL_PREDICTIONS.labels(threshold=THRESHOLD).inc()
     PREDICTION_LATENCY.observe(latency)
-
-    #log
-    logger.info("prediction completed", extra={
-        "trace_id": trace_id,
-        "customer_id": customer_dict['customerID'],
-        "churn_prob": predictions[0][1],
-        "no_churn_prob": predictions[0][0],
-        "threshold": THRESHOLD
-    })
 
     return {
         "customer_id": customer_dict['customerID'],
@@ -120,8 +151,29 @@ async def predict_churn(customer: CustomerChurnBase, request: Request):
 
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
-    """Basic health check for MLP model"""
+    """
+    Health check endpoint to verify API and model availability.
     
+    Performs a lightweight check to determine if the ML model has been 
+    properly loaded and the service is ready to handle prediction requests.
+    
+    Returns:
+        HealthResponse containing:
+            - status: "healthy" if model is loaded, "unhealthy" otherwise
+            - model_loaded: Boolean indicating whether the model is available
+            - timestamp: Unix timestamp of the health check
+    
+    Note:
+        This endpoint is designed for use with orchestration systems (e.g., 
+        Kubernetes liveness/readiness probes) and monitoring services.
+    
+    Example Response:
+        {
+            "status": "healthy",
+            "model_loaded": true,
+            "timestamp": 1714567890.123
+        }
+    """
     # Check if model is loaded
     model_loaded = model is not None
     
