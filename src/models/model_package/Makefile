@@ -1,6 +1,6 @@
-.PHONY: all build test clean
+.PHONY: all build clean test
 
-all: clean test build
+all: clean build test
 
 build:
 	uv build

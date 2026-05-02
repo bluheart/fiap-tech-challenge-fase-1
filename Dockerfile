@@ -3,6 +3,12 @@ FROM python:3.13-slim AS builder
 
 WORKDIR /app
 
+# Install system dependencies needed for building
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    make \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install uv for faster package management
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
@@ -11,20 +17,27 @@ ENV UV_COMPILE_BYTECODE=1
 
 # Copy dependency files first for better caching
 COPY pyproject.toml ./
-
-# Create the dist directory and copy the local package if it exists
-RUN mkdir -p dist
-COPY dist/mlp_package-0.1.0-py3-none-any.whl dist/ 2>/dev/null || true
-
-# Install dependencies
-RUN uv sync --frozen --no-dev --no-install-project
-
-# Copy the rest of the application
-COPY src/ src/
 COPY README.md ./
 
-# Install the project itself
-RUN uv sync --frozen --no-dev
+# Copy source code (needed for package building and project installation)
+COPY src/ src/
+
+# Create dist directory
+RUN mkdir -p dist
+
+# Build the mlp-package (equivalent to task build-package)
+RUN if [ -f src/models/model_package/Makefile ]; then \
+        cd src/models/model_package && make all; \
+    else \
+        echo "Error: Makefile not found in src/models/model_package"; \
+        exit 1; \
+    fi
+
+# Install the built package with force reinstall and no deps (equivalent to task add-package)
+RUN uv pip install --force-reinstall --no-deps dist/mlp_package-0.1.0-py3-none-any.whl
+
+# Install all project dependencies (equivalent to task make-pack final uv sync)
+RUN uv sync --no-dev
 
 # Production stage
 FROM python:3.13-slim AS production
@@ -40,6 +53,9 @@ COPY --from=builder /app/.venv /app/.venv
 # Copy application code
 COPY --from=builder /app/src /app/src
 
+# Copy built package (in case it's needed at runtime)
+COPY --from=builder /app/dist /app/dist
+
 # Set Python path to use virtual environment
 ENV PATH="/app/.venv/bin:$PATH"
 
@@ -48,7 +64,7 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH="/app"
 
-# Expose port (adjust if needed)
+# Expose port
 EXPOSE 8000
 
 # Switch to non-root user
