@@ -48,8 +48,9 @@ def test_predict_endpoint():
     assert response.status_code == 200
     data = response.json()
     assert "customer_id" in data
-    assert "churn_risk" in data
-    assert "validated_data" in data
+    assert "churn" in data
+    assert "probs" in data
+    assert "threshold_used" in data
 
 def test_predict_invalid_data():
     """Verify predict endpoint handles invalid data properly"""
