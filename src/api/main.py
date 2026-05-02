@@ -14,7 +14,6 @@ from .logging_config import logger
 from .metrics import (
     TOTAL_PREDICTIONS,
     PREDICTION_LATENCY,
-    TOTAL_ERRORS,
     MODEL_LOADED,
     CURRENT_THRESHOLD
 )
@@ -73,16 +72,7 @@ app.add_middleware(
 # ============================================================================
 # Prometheus metrics + endpoint
 # ============================================================================
-
-# With this:
-Instrumentator(
-    should_group_status_codes=False,
-    should_ignore_untemplated=True,
-    should_respect_env_var=True,
-    should_instrument_requests_inprogress=True,
-    excluded_handlers=[".*admin.*", "/metrics"],
-    env_var_name="ENABLE_METRICS"
-).instrument(app).expose(app, endpoint="/metrics", include_in_schema=False)
+Instrumentator().instrument(app).expose(app, endpoint="/metrics")
 
 #=============================================================================
 # ENDPOINTS
@@ -123,49 +113,41 @@ async def predict_churn(customer: CustomerChurnBase, request: Request):
         }
     """
     if not model:
-        MODEL_LOADED.set(0)  # Update metric
-        raise HTTPException(status_code=503, detail="Model not available")
-    
+        raise HTTPException(status_code=503, detail="Modelo not available")
+
     trace_id = getattr(request.state, 'trace_id', 'N/A')
     customer_dict = customer.model_dump()
-    
+
+    # latency of prediction
     start = time.perf_counter()
-    
-    try:
-        predictions = model.predict([customer_dict])
-        
-        if not predictions or len(predictions) == 0:
-            TOTAL_ERRORS.labels(error_type="empty_prediction").inc()
-            raise HTTPException(status_code=500, detail="Prediction failed")
-        
-        latency = time.perf_counter() - start
-        
-        # Record metrics
-        TOTAL_PREDICTIONS.labels(threshold=str(THRESHOLD)).inc()
-        PREDICTION_LATENCY.observe(latency)
-        
+
+    predictions = model.predict([customer_dict])
+    if predictions:
         logger.info("prediction completed", extra={
             "trace_id": trace_id,
             "customer_id": customer_dict['customerID'],
             "churn_prob": predictions[0][1],
             "no_churn_prob": predictions[0][0],
-            "threshold": THRESHOLD,
-            "latency": latency
+            "threshold": THRESHOLD
         })
-        
-        return {
-            "customer_id": customer_dict['customerID'],
-            "churn": "yes" if predictions[0][1] > THRESHOLD else "no",
-            "threshold_used": THRESHOLD,
-            "probs": {
-                "yes": predictions[0][1],
-                "no": predictions[0][0]
-            }
+    else:
+        logger.warning("predictions not generated")
+
+    latency = time.perf_counter() - start
+
+    # Prometheus metrics
+    TOTAL_PREDICTIONS.labels(threshold=THRESHOLD).inc()
+    PREDICTION_LATENCY.observe(latency)
+
+    return {
+        "customer_id": customer_dict['customerID'],
+        "churn": "yes" if predictions[0][1]>THRESHOLD else "no",
+        "threshold_used": THRESHOLD,
+        "probs": {
+            "yes":  predictions[0][1],
+            "no": predictions[0][0]
         }
-    except Exception as e:
-        TOTAL_ERRORS.labels(error_type="prediction_error").inc()
-        logger.error(f"Prediction failed: {str(e)}")
-        raise HTTPException(status_code=500, detail="Prediction error")
+    }
 
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
