@@ -50,4 +50,4 @@ test-run = "uvicorn src.api.main:app --reload --port 8000"
 url = "https://download.pytorch.org/whl/cpu"
 
 [tool.uv.sources]
-mlp-package = { path = "dist/mlp_package-0.1.0-py3-none-any.whl" }
+mlp-package = { path = "src/models/model_package" }

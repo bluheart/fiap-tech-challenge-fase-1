@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request,  HTTPException
 from mlp_package import LoadModel
 from pathlib import Path
+from typing import List
 import time
 
 # Prometheus
@@ -79,19 +80,19 @@ Instrumentator().instrument(app).expose(app, endpoint="/metrics")
 # ENDPOINTS
 #=============================================================================
 @app.post("/predict")
-async def predict_churn(customer: CustomerChurnBase, request: Request):
+async def predict_churn(customers: List[CustomerChurnBase], request: Request):
     """
-    Predict customer churn probability based on provided customer data.
+    Predict customer churn probability for multiple customers.
     
-    Uses the pre-loaded machine learning model to calculate churn probability
-    and returns a binary prediction based on a configured threshold.
+    Uses the pre-loaded machine learning model to calculate churn probabilities
+    for a batch of customers and returns binary predictions based on a configured threshold.
     
     Args:
-        customer: Validated customer data conforming to CustomerChurnBase schema
+        customers: List of validated customer data conforming to CustomerChurnBase schema
         request: FastAPI request object for accessing request state (trace_id)
     
     Returns:
-        dict containing:
+        List of dicts, each containing:
             - customer_id: The customer's identifier
             - churn: Binary prediction ("yes"/"no") based on threshold comparison
             - threshold_used: The probability threshold used for classification
@@ -99,63 +100,60 @@ async def predict_churn(customer: CustomerChurnBase, request: Request):
     
     Raises:
         HTTPException 503: If the model has not been loaded or initialized
-    
-    Side Effects:
-        - Increments Prometheus TOTAL_PREDICTIONS counter
-        - Records prediction latency to PREDICTION_LATENCY histogram
-        - Logs prediction details including trace_id, customer_id, and probabilities
-    
-    Example Response:
-        {
-            "customer_id": "1234-ABCD",
-            "churn": "yes",
-            "threshold_used": 0.5,
-            "probs": {"yes": 0.78, "no": 0.22}
-        }
+        HTTPException 400: If the customers list is empty
     """
     if not model:
         MODEL_LOADED.set(0)  # Update metric
         raise HTTPException(status_code=503, detail="Model not available")
     
+    if not customers:
+        raise HTTPException(status_code=400, detail="Customers list cannot be empty")
+    
     trace_id = getattr(request.state, 'trace_id', 'N/A')
-    customer_dict = customer.model_dump()
+    customers_dicts = [customer.model_dump() for customer in customers]
     
     start = time.perf_counter()
     
     try:
-        predictions = model.predict([customer_dict])
+        # Get predictions for all customers at once
+        predictions = model.predict(customers_dicts)
         
         if not predictions or len(predictions) == 0:
             TOTAL_ERRORS.labels(error_type="empty_prediction").inc()
             raise HTTPException(status_code=500, detail="Prediction failed")
         
+        # Process results for each customer
+        results = []
+        for i, customer_dict in enumerate(customers_dicts):
+            prediction_result = {
+                "customer_id": customer_dict['customerID'],
+                "churn": "yes" if predictions[i][1] > THRESHOLD else "no",
+                "threshold_used": THRESHOLD,
+                "probs": {
+                    "yes": predictions[i][1],
+                    "no": predictions[i][0]
+                }
+            }
+            results.append(prediction_result)
+        
         latency = time.perf_counter() - start
         
-        # Record metrics
-        TOTAL_PREDICTIONS.labels(threshold=str(THRESHOLD)).inc()
+        # Record metrics - increment by number of predictions
+        TOTAL_PREDICTIONS.labels(threshold=str(THRESHOLD)).inc(len(customers))
         PREDICTION_LATENCY.observe(latency)
         
-        logger.info("prediction completed", extra={
+        logger.info("batch prediction completed", extra={
             "trace_id": trace_id,
-            "customer_id": customer_dict['customerID'],
-            "churn_prob": predictions[0][1],
-            "no_churn_prob": predictions[0][0],
+            "batch_size": len(customers),
             "threshold": THRESHOLD,
             "latency": latency
         })
         
-        return {
-            "customer_id": customer_dict['customerID'],
-            "churn": "yes" if predictions[0][1] > THRESHOLD else "no",
-            "threshold_used": THRESHOLD,
-            "probs": {
-                "yes": predictions[0][1],
-                "no": predictions[0][0]
-            }
-        }
+        return results
+        
     except Exception as e:
         TOTAL_ERRORS.labels(error_type="prediction_error").inc()
-        logger.error(f"Prediction failed: {str(e)}")
+        logger.error(f"Batch prediction failed: {str(e)}")
         raise HTTPException(status_code=500, detail="Prediction error")
         
 
