@@ -1,4 +1,4 @@
-FROM prom/prometheus:v3-distroless
+FROM prom/prometheus:v3
 USER root
 
 COPY alerts.yml /etc/prometheus/alerts.yml
