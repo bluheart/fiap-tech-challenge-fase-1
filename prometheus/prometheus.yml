@@ -1,0 +1,35 @@
+# Prometheus Configuration
+# This file defines the global settings, rule files, and scrape configurations
+# for monitoring services in the MLP (Machine Learning Platform) environment.
+
+global:
+  # How frequently to scrape targets by default.
+  scrape_interval: 15s
+  # How frequently to evaluate alerting and recording rules.
+  evaluation_interval: 15s
+
+# Rule files specify the locations of recording and alerting rules.
+# These rules are evaluated at the global evaluation_interval.
+rule_files:
+  - "alerts.yml"
+
+scrape_configs:
+  # Self-monitoring: Scrape Prometheus's own metrics endpoint.
+  # This allows Prometheus to monitor its own health and performance.
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # MLP API Service: Scrape metrics from the main API application.
+  # This job collects custom application metrics exposed by the API service.
+  - job_name: 'mlp-api'
+    static_configs:
+      - targets: ['api:8000']  # Docker service name and port
+    metrics_path: '/metrics'   # Endpoint where application metrics are exposed
+    scheme: http
+    # Relabeling configuration to standardize instance labels.
+    # This ensures consistent instance naming regardless of the underlying address.
+    relabel_configs:
+        - source_labels: [__address__]
+          target_label: instance
+          replacement: 'mlp-api'  # Set a human-readable instance name

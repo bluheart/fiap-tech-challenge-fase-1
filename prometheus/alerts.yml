@@ -1,0 +1,57 @@
+# Alert Rules Configuration
+# This file defines alerting rules for the MLP API service.
+# Alerts are evaluated at the global evaluation_interval specified in prometheus.yml.
+
+groups:
+  # Alert group for the MLP API service
+  # Groups organize related alerts and control their evaluation frequency
+  - name: mlp-api-alerts
+    rules:
+      # Service Availability Alert
+      # Triggers when the API service is unreachable or down
+      - alert: APIDown
+        expr: up{job='mlp-api'} == 0          # Check if the target is down
+        for: 1m                                # Must be down for 1 minute before alerting
+        labels:
+          severity: critical                   # Highest severity - immediate action required
+        annotations:
+          summary: "MLP API is down"           # Brief alert description
+          description: "API not responding"    # Detailed alert information
+      
+      # Error Rate Alert
+      # Triggers when the percentage of 5xx errors exceeds the threshold
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{status=~"5.."}[5m]))   # Rate of 5xx errors over 5 minutes
+          / sum(rate(http_requests_total[5m])) > 0.05          # Divided by total request rate, threshold: 5%
+        for: 2m                                # Must persist for 2 minutes before alerting
+        labels:
+          severity: high                      # High severity - requires prompt attention
+        annotations:
+          summary: "Error rate above 5%"       # Brief alert description
+          description: "{{ $value | humanizePercentage }} of requests are failing"  # Dynamic description with formatted value
+      
+      # Latency Alert
+      # Triggers when the 95th percentile of request latency exceeds 1 second
+      - alert: HighLatency
+        expr: |
+          histogram_quantile(0.95,            # Calculate 95th percentile from histogram
+            rate(http_request_latency_seconds_bucket[5m])  # Rate of latency buckets over 5 minutes
+          ) > 1                                # Threshold: 1 second
+        for: 5m                                # Must persist for 5 minutes before alerting
+        labels:
+          severity: medium                    # Medium severity - investigate if persistent
+        annotations:
+          summary: "Latency p95 above 1 second"  # Brief alert description
+          description: "Current latency: {{ $value | humanizeDuration }}"  # Dynamic description with formatted duration
+
+      # Model Availability Alert
+      # Triggers when the ML model fails to load in the API service
+      - alert: ModelNotLoaded
+        expr: model_loaded == 0                # Check if model is loaded (0 = not loaded, 1 = loaded)
+        for: 1m                                # Must persist for 1 minute before alerting
+        labels:
+          severity: high                      # High severity - model is critical for predictions
+        annotations:
+          summary: "Model not loaded"          # Brief alert description
+          description: "API is running without the prediction model"  # Detailed context about the issue
