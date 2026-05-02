@@ -6,4 +6,4 @@ mkdir -p /prometheus
 chown nobody:nobody /prometheus
 
 # Run prometheus as nobody user
-exec su-exec nobody /bin/prometheus "$@"
+exec nobody /bin/prometheus "$@"
