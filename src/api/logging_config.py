@@ -26,13 +26,13 @@ Usage:
     logger.error("Prediction failed", extra={"error_type": "model_timeout"})
 """
 
-from pythonjsonlogger import jsonlogger
+from pythonjsonlogger import json
 import logging
 from datetime import datetime
 import sys
 
 
-class CustomJsonFormatter(jsonlogger.JsonFormatter):
+class CustomJsonFormatter(json.JsonFormatter):
     """
     Custom JSON log formatter that enriches log records with additional metadata.
     

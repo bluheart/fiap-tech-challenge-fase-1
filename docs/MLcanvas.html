@@ -220,13 +220,12 @@
                         <span class="slo-item">🎯 Recall (churn) ≥ 80%</span>
                         <span class="slo-item">📏 Precisão ~ 50%</span>
                         <span class="slo-item">📈 AUC-ROC ≥ 0,80</span>
-                        <span class="slo-item">⚡ Inferência API ≤ 200ms (p95)</span>
+                        <span class="slo-item">⚡ Inferência API ≤ 500ms</span>
                         <span class="slo-item">🛡️ Disponibilidade API ≥ 99,5%</span>
-                        <span class="slo-item">🔄 Retreinamento mensal</span>
                         <span class="slo-item">📦 F1-score (classe churn) ≥ 0,75</span>
                     </div>
                     <hr>
-                    <p><strong>Justificativa:</strong> recall elevado garante capturar a maioria dos cancelamentos; baixa latência permite integração com CRM e call center em tempo real.</p>
+                    <p><strong>Justificativa:</strong> recall elevado garante capturar a maioria dos cancelamentos;baixa latência permite integração com CRM e call center em tempo real.</p>
                 </div>
             </div>
             <!-- Dados -->
@@ -291,8 +290,7 @@
                 <div class="canvas-card-content">
                     <p><strong>🎯 Modelo principal:</strong> MLP (Rede Neural) com PyTorch</p>
                     <ul>
-                        <li>Arquitetura: <code>Input → 2-3 camadas ocultas (Dropout + BatchNorm) → Sigmoid</code></li>
-                        <li>Otimizador: Adam, função de perda: BCEWithLogitsLoss (com pesos para desbalanceamento)</li>
+                        <li>Arquitetura: <code>Input → 2-3 camadas ocultas (Dropout + BatchNorm) → ReLU</code></li>
                     </ul>
                     <p><strong>📊 Baselines (Scikit-Learn):</strong></p>
                     <ul>
@@ -300,7 +298,7 @@
                         <li>DummyClassifier</li>
                         <li>Comparação via Recall, AUC-ROC, F1-score</li>
                     </ul>
-                    <p><em>O modelo final será selecionado com melhor recall ≥80% e AUC-ROC ≥0.90.</em></p>
+                    <p><em>O modelo final será selecionado com melhor recall ≥80% e AUC-ROC ≥0.80.</em></p>
                 </div>
             </div>
             <div class="canvas-card">
@@ -309,7 +307,6 @@
                     <ul>
                         <li><strong>MLflow Tracking</strong> – registro de hiperparâmetros, métricas (acurácia, recall, AUC-ROC), artefatos (modelos, curvas ROC, matriz confusão)</li>
                         <li>Comparação direta entre experimentos PyTorch vs Scikit-Learn</li>
-                        <li>Versionamento de dados: <strong>DVC</strong> (opcional) para pipeline reprodutível</li>
                         <li>Log automático de métricas durante treino e validação</li>
                         <li>Registro do modelo campeão no MLflow Model Registry</li>
                     </ul>
@@ -321,9 +318,8 @@
                     <ul>
                         <li><strong>Framework:</strong> FastAPI</li>
                         <li><strong>Endpoint:</strong> <code>POST /predict</code> – recebe JSON com features (após pré-processamento)</li>
-                        <li><strong>Resposta:</strong> <code>{"churn_probability": 0.87, "high_risk": true, "risk_level": "alto"}</code></li>
+                        <li><strong>Resposta:</strong> <code>[{"customer_id": "string", "churn": "no", "threshold_used": 0.2, "probs": { "yes": 0.05507930740714073,"no": 0.9449206590652466}}]</code></li>
                         <li>Documentação interativa</li>
-                        <li>Latência garantida dentro do SLO (≤200ms p95)</li>
                     </ul>
                 </div>
             </div>
@@ -355,9 +351,9 @@
                         <li>Comparação de modelos e seleção (Recall + AUC-ROC + trade-off negócio)</li>
                         <li>Empacotamento do modelo campeão (formato TorchScript ou pickle + pré-processamento)</li>
                         <li>Desenvolvimento da API (FastAPI, validação de entrada, documentação)</li>
-                        <li>Testes de carga e validação de SLOs (latência, throughput)</li>
-                        <li>Implantação em cloud/on-prem + pipeline CI/CD</li>
-                        <li>Monitoramento contínuo, retreinamento mensal e atualização do ML Canvas com métricas reais</li>
+                        <li>Testes</li>
+                        <li>Empacotamento da Solução em Docker</li>
+                        <li>Monitoramento contínuo com Grafana e Prometheus, atualização do ML Canvas com métricas reais</li>
                     </ol>
                 </div>
             </div>
