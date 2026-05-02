@@ -30,7 +30,7 @@ from prometheus_client import Counter, Histogram, Gauge
 # threshold used. This enables monitoring prediction volume per threshold
 # and analyzing threshold distribution over time.
 TOTAL_PREDICTIONS = Counter(
-    'total_predictions',
+    'predictions_total',
     'Total of predictions',
     ['threshold']  # Label: probability threshold used for classification
 )
@@ -40,7 +40,7 @@ TOTAL_PREDICTIONS = Counter(
 # Useful for monitoring error rates, identifying common failure modes,
 # and triggering alerts when error frequency increases.
 TOTAL_ERRORS = Counter(
-    'total_errors',
+    'errors_total',
     'Total of errors of the API',
     ['error_type']  # Label: category of error (e.g., 'validation', 'model', 'server')
 )
