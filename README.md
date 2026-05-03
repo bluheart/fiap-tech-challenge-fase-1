@@ -89,7 +89,6 @@ docker-compose up -d
 
 | Método | Endpoint | Descrição |
 |--------|----------|-----------|
-| GET | `/` | Informações da API |
 | GET | `/health` | Health check |
 | GET | `/docs` | Swagger UI |
 | GET | `/redoc` | ReDoc |

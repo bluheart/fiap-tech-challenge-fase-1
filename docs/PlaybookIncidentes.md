@@ -1,7 +1,7 @@
 # Playbook de Resposta a Incidentes — API de Predição de Churn (MLP)
 
 - **Projeto:** FIAP - Predição de Churn em Telecom
-- **Stack:** FastAPI + MLP (scikit-learn) + Prometheus + Grafana + Docker Compose
+- **Stack:** FastAPI + MLP (PyTorch) + Prometheus + Grafana + Docker Compose
 - **Versão do Playbook:** 1.0
 - **Data:** 03 de maio de 2026
 - **Times Envolvidos:** Data Science, SRE/Plataforma, Negócio (Retenção)
@@ -143,7 +143,7 @@ docker compose up -d
 curl -s http://localhost:8000/health | jq
 
 # 2. Predição de teste funcional
-curl -s -X POST http://localhost:8000/v1/predict \
+curl -s -X POST http://localhost:8000/predict \
   -H "Content-Type: application/json" \
   -d '{"tenure": 12, "monthly_charges": 85.5, "total_charges": 1026.0, "contract": "monthly", "payment_method": "credit_card"}' | jq
 
@@ -271,13 +271,13 @@ docker compose logs api --tail=100 | grep -i "error\|exception\|traceback\|fail"
 
 # 4. Testar predição manual para ver resposta completa
 curl -s -w "\nHTTP_CODE: %{http_code}\nCONTENT_TYPE: %{content_type}\n" \
-  -X POST http://localhost:8000/v1/predict \
+  -X POST http://localhost:8000/predict \
   -H "Content-Type: application/json" \
   -d '{"tenure": 12, "monthly_charges": 85.5, "total_charges": 1026.0, "contract": "monthly", "payment_method": "credit_card"}'
 
 # 5. Testar com payload inválido para ver se causa 500 inesperado
 curl -s -w "\nHTTP_CODE: %{http_code}\n" \
-  -X POST http://localhost:8000/v1/predict \
+  -X POST http://localhost:8000/predict \
   -H "Content-Type: application/json" \
   -d '{"tenure": -1, "monthly_charges": null, "total_charges": "abc"}' | jq
 
