@@ -18,6 +18,7 @@
 
 ## Quantitative Analysis
 - Comparison with baseline models
+
 | tags.mlflow.runName                        | metrics.recall_score | metrics.precision_score | metrics.accuracy_score | metrics.f1_score | metrics.roc_auc | metrics.log_loss |
 |--------------------------------------------|----------------------|-------------------------|------------------------|------------------|-----------------|------------------|
 | mlp model run threshold 0.20               | 0.863636             | 0.483533                | 0.718950               | 0.619962         | 0.855917        | 0.406376         |
