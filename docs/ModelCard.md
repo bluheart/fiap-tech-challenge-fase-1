@@ -32,7 +32,7 @@
 | logistic unbalanced no scaling             | 0.525333             | 0.661074                | 0.801987               | 0.585438         | 0.853764        | 0.407887         |
 
 ## Ethical Considerations
-- No signicant baises were found during tests
+- No signicant biases were found during tests
 
 ## Limitations & Recommendations
-- Low precision, can be raised with higher thresholds at the cost of recall
+- Low precision, can be raised with higher thresholds at the cost of recall scpre
