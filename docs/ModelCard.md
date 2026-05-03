@@ -35,4 +35,4 @@
 - No signicant biases were found during tests
 
 ## Limitations & Recommendations
-- Low precision, can be raised with higher thresholds at the cost of recall scpre
+- Low precision, can be raised with higher thresholds at the cost of recall score
